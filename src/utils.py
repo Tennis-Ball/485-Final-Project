@@ -34,10 +34,13 @@ def parse_filing(file_path):
 def extract_relevant_sections(text):
     # Define patterns to extract relevant sections
     patterns = [
-        r'(?i)(Item\s+2\.\s+Management\'s Discussion and Analysis.*?)(?=Item\s+\d)', 
-        r'(?i)(Item\s+1A\.\s+Risk Factors.*?)(?=Item\s+\d)',
-        r'(?i)(Quantitative and Qualitative Disclosures about Market Risk.*?)(?=Item\s+\d)'
+        r'(?i)(Item\s*2\s*[\.:]?\s*Management\'?s\s+Discussion\s+and\s+Analysis.*?)(?=Item\s*\d|\Z)', 
+        r'(?i)(Item\s*1A\s*[\.:]?\s*Risk\s+Factors.*?)(?=Item\s*\d|\Z)',
+        r'(?i)(Quantitative\s+and\s+Qualitative\s+Disclosures\s+about\s+Market\s+Risk.*?)(?=Item\s*\d|\Z)',
+        r'(?i)(Management\'?s\s+Discussion\s+and\s+Analysis.*?)(?=Item\s*\d|\Z)',  # Alternate phrasing without "Item 2"
+        r'(?i)(Risk\s+Factors.*?)(?=Item\s*\d|\Z)',  # Alternate phrasing without "Item 1A"
     ]
+
     
     sections = []
     for pattern in patterns:

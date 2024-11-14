@@ -10,13 +10,42 @@ from model_training import temporal_train_test_split, train_model, evaluate_mode
 
 def main():
     # Step 1: Define tickers and download filings
-    tickers = ["AAPL"]  # Add more tickers as needed
-    download_filings(tickers, num_filings=4)
+    tickers = [
+        # Technology
+        "AAPL",
+        
+        # Finance
+        "JPM",
+        
+        # Healthcare
+        "JNJ",
+        
+        # Consumer Discretionary
+        "AMZN",
+        
+        # Energy
+        "XOM",
+        
+        # Utilities
+        "DUK",
+        
+        # Consumer Staples
+        "PG",
+        
+        # Industrial
+        "BA",
+        
+        # Telecommunications
+        "VZ",
+        
+        # Real Estate
+        "SPG",
+    ]  # Add more tickers as needed
+    download_filings(tickers, num_filings=2)
     
     # Step 2: Collect and align filings with stock data
     filings = collect_filings(tickers)
     filings = align_data(filings)
-    print(filings)
     filings = [f for f in filings if f['Volatility'] is not None and f['Text']]
     
     if not filings:
@@ -43,6 +72,8 @@ def main():
     
     # Step 9: Evaluate the model
     y_pred, mae, rmse = evaluate_model(model, X_test, y_test)
+    print("y_test", y_test)
+    print("y_pred", y_pred)
     print(f"MAE: {mae}")
     print(f"RMSE: {rmse}")
     
