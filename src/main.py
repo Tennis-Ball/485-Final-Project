@@ -41,6 +41,7 @@ def main():
         # Real Estate
         "SPG",
     ]  # Add more tickers as needed
+    tickers = ["AAPL"]
     download_filings(tickers, num_filings=2)
     
     # Step 2: Collect and align filings with stock data
