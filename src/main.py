@@ -118,7 +118,7 @@ def main():
     tickers = [
         "AAPL",
     ]
-    download_filings(tickers, num_filings=10)
+    download_filings(tickers, num_filings=40)
     
     # Step 2: Collect and align filings with stock data
     filings = collect_filings(tickers)
