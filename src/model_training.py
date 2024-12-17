@@ -6,6 +6,8 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.neural_network import MLPRegressor
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from sklearn.model_selection import TimeSeriesSplit, GridSearchCV, RandomizedSearchCV
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import Pipeline
 
 logging.basicConfig(
     level=logging.INFO,
@@ -27,9 +29,12 @@ def temporal_train_test_split(X, y, test_size=0.2):
 
 def evaluate_model(model, X_test, y_test):
     y_pred = model.predict(X_test)
+    residuals = y_test - y_pred
     mae = mean_absolute_error(y_test, y_pred)
     rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+    logging.info(f"Residuals - Mean: {np.mean(residuals):.4f}, Std Dev: {np.std(residuals):.4f}")
     return y_pred, mae, rmse
+
 
 def get_models():
     """
@@ -46,44 +51,51 @@ def get_models():
 
 def get_hyperparameter_grids():
     """
-    Returns a dictionary of hyperparameter grids for tuning.
-    Keys should match keys in get_models().
+    Returns hyperparameter grids for tuning models.
     """
     grids = {
-        'ridge': {
-            'alpha': [0.1, 1.0, 10.0, 100.0]
-        },
+        'ridge': {'model__alpha': [0.1, 1.0, 10.0, 100.0]},  # Correct syntax for Ridge in a pipeline
         'random_forest': {
             'n_estimators': [50, 100, 200],
-            'max_depth': [5, 10, 20]
+            'max_depth': [5, 10, 20, None],
+            'min_samples_split': [2, 5, 10],
+            'min_samples_leaf': [1, 2, 4]
         },
-        # Add more grids here for other models as needed
+        'mlp': {
+            'model__hidden_layer_sizes': [(50,), (100,), (50, 50)],
+            'model__activation': ['relu', 'tanh'],
+            'model__learning_rate_init': [0.001, 0.01]
+        }
     }
     return grids
 
 def train_and_tune_model(model_name, model, X_train, y_train, cv_splits=3):
     """
-    Trains and optionally tunes a given model using TimeSeriesSplit for CV.
-    If hyperparameters are available for the model in get_hyperparameter_grids(),
-    GridSearchCV or RandomizedSearchCV is used.
-
-    Returns the best trained model.
+    Train and tune model with feature scaling for models requiring it (MLP, Ridge, etc.).
     """
     grids = get_hyperparameter_grids()
-    if model_name in grids:
-        logging.info(f"Hyperparameter tuning for {model_name}...")
-        tscv = TimeSeriesSplit(n_splits=cv_splits)
+    tscv = TimeSeriesSplit(n_splits=cv_splits)
 
-        # We can choose GridSearchCV or RandomizedSearchCV here.
-        # Using GridSearchCV for simplicity.
-        grid_search = GridSearchCV(model, grids[model_name], cv=tscv, scoring='neg_mean_squared_error', n_jobs=-1)
+    # Apply scaling for certain models
+    if model_name in ['mlp', 'ridge', 'linear_regression']:
+        pipeline = Pipeline([
+            ('scaler', StandardScaler()),  # Add feature scaling
+            ('model', model)
+        ])
+    else:
+        pipeline = model  # No scaling for tree-based models
+
+    # GridSearchCV for hyperparameter tuning if available
+    if model_name in grids:
+        grid_search = GridSearchCV(
+            pipeline, grids[model_name], cv=tscv, scoring='neg_mean_squared_error', n_jobs=-1
+        )
         grid_search.fit(X_train, y_train)
         logging.info(f"Best parameters for {model_name}: {grid_search.best_params_}")
         return grid_search.best_estimator_
     else:
-        # No hyperparameter tuning, just fit directly
-        model.fit(X_train, y_train)
-        return model
+        pipeline.fit(X_train, y_train)
+        return pipeline
 
 def quick_cross_validation(model, X, y, cv_splits=3):
     """

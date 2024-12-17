@@ -62,12 +62,12 @@ def plot_distributions(y_test, y_pred, model_name="model", output_dir="plots"):
     plt.close()
 
     # Histogram of residuals
-    plt.figure(figsize=(10,6))
-    plt.hist(residuals, bins=20, color='red')
+    plt.figure(figsize=(10, 6))
+    plt.hist(residuals, bins=10, color='red', edgecolor='black')
     plt.xlabel('Residual')
     plt.ylabel('Frequency')
     plt.title(f'Residual Distribution - {model_name}')
-    plt.grid(True)
+    plt.grid(axis='y', linestyle='--')
     plt.tight_layout()
     plt.savefig(os.path.join(output_dir, f'residual_distribution_{model_name}.png'))
     plt.close()
